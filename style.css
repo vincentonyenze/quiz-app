@@ -74,6 +74,12 @@ body {
   font-size: 1.5rem;
 }
 
+/* Headings get focus when a screen opens; no outline needed for that */
+.screen h1:focus,
+.screen h2:focus {
+  outline: none;
+}
+
 .screen__text {
   color: var(--color-muted);
 }
