@@ -3,6 +3,7 @@ const questionTotalEl = document.getElementById("question-total");
 const startBtn = document.getElementById("start-btn");
 const questionTextEl = document.getElementById("question-text");
 const answersEl = document.getElementById("answers");
+const feedbackEl = document.getElementById("feedback");
 
 const screens = {
   start: document.getElementById("start-screen"),
@@ -14,6 +15,7 @@ const screens = {
 const state = {
   screen: "start",
   currentIndex: 0, // which question is showing
+  answers: [], // answers[i] = index the user picked for question i
 };
 
 // ===== Helpers =====
@@ -48,7 +50,7 @@ function showScreen(name) {
 }
 
 // ===== Rendering =====
-function createAnswerButton(answer, index) {
+function createAnswerButton(answer, index, question, selectedIndex) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "answer";
@@ -58,23 +60,68 @@ function createAnswerButton(answer, index) {
   setTextWithCode(text, answer);
   button.append(text);
 
+  // Once answered, lock the buttons and reveal the result
+  const isAnswered = selectedIndex !== undefined;
+  if (isAnswered) {
+    button.disabled = true;
+    if (index === question.correctIndex) {
+      button.classList.add("is-correct");
+    } else if (index === selectedIndex) {
+      button.classList.add("is-incorrect");
+    }
+  }
+
   return button;
+}
+
+function renderFeedback(question, selectedIndex) {
+  if (selectedIndex === undefined) {
+    feedbackEl.className = "feedback";
+    feedbackEl.textContent = "";
+    return;
+  }
+
+  const isCorrect = selectedIndex === question.correctIndex;
+  feedbackEl.className = `feedback feedback--${isCorrect ? "correct" : "incorrect"}`;
+
+  if (isCorrect) {
+    feedbackEl.textContent = "Correct! 🎉";
+  } else {
+    const correctAnswer = question.answers[question.correctIndex];
+    setTextWithCode(feedbackEl, `Not quite. The correct answer is ${correctAnswer}.`);
+  }
 }
 
 function renderQuestion() {
   const question = questions[state.currentIndex];
+  const selectedIndex = state.answers[state.currentIndex];
 
   setTextWithCode(questionTextEl, question.question);
-  answersEl.replaceChildren(...question.answers.map(createAnswerButton));
+  answersEl.replaceChildren(
+    ...question.answers.map((answer, index) =>
+      createAnswerButton(answer, index, question, selectedIndex)
+    )
+  );
+  renderFeedback(question, selectedIndex);
 }
 
 // ===== Event handlers =====
 function handleStart() {
   state.currentIndex = 0;
+  state.answers = [];
   renderQuestion();
   showScreen("quiz");
 }
 
+function handleAnswerClick(event) {
+  const button = event.target.closest(".answer");
+  if (!button || button.disabled) return;
+
+  state.answers[state.currentIndex] = Number(button.dataset.index);
+  renderQuestion();
+}
+
 // ===== Init =====
 startBtn.addEventListener("click", handleStart);
+answersEl.addEventListener("click", handleAnswerClick);
 questionTotalEl.textContent = questions.length;
