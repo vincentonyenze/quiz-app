@@ -4,6 +4,8 @@ const startBtn = document.getElementById("start-btn");
 const questionTextEl = document.getElementById("question-text");
 const answersEl = document.getElementById("answers");
 const feedbackEl = document.getElementById("feedback");
+const prevBtn = document.getElementById("prev-btn");
+const nextBtn = document.getElementById("next-btn");
 
 const screens = {
   start: document.getElementById("start-screen"),
@@ -92,6 +94,16 @@ function renderFeedback(question, selectedIndex) {
   }
 }
 
+function renderNav(selectedIndex) {
+  const isFirst = state.currentIndex === 0;
+  const isLast = state.currentIndex === questions.length - 1;
+
+  prevBtn.disabled = isFirst;
+  // You must answer before moving on
+  nextBtn.disabled = selectedIndex === undefined;
+  nextBtn.textContent = isLast ? "See results" : "Next";
+}
+
 function renderQuestion() {
   const question = questions[state.currentIndex];
   const selectedIndex = state.answers[state.currentIndex];
@@ -103,6 +115,19 @@ function renderQuestion() {
     )
   );
   renderFeedback(question, selectedIndex);
+  renderNav(selectedIndex);
+}
+
+// ===== Navigation =====
+function goToQuestion(index) {
+  state.currentIndex = index;
+  renderQuestion();
+  // Start keyboard and screen-reader users at the new question
+  questionTextEl.focus();
+}
+
+function finishQuiz() {
+  showScreen("result");
 }
 
 // ===== Event handlers =====
@@ -119,9 +144,28 @@ function handleAnswerClick(event) {
 
   state.answers[state.currentIndex] = Number(button.dataset.index);
   renderQuestion();
+  // The clicked button was replaced, so move focus to the next step
+  nextBtn.focus();
+}
+
+function handlePrev() {
+  if (state.currentIndex > 0) {
+    goToQuestion(state.currentIndex - 1);
+  }
+}
+
+function handleNext() {
+  const isLast = state.currentIndex === questions.length - 1;
+  if (isLast) {
+    finishQuiz();
+  } else {
+    goToQuestion(state.currentIndex + 1);
+  }
 }
 
 // ===== Init =====
 startBtn.addEventListener("click", handleStart);
 answersEl.addEventListener("click", handleAnswerClick);
+prevBtn.addEventListener("click", handlePrev);
+nextBtn.addEventListener("click", handleNext);
 questionTotalEl.textContent = questions.length;
