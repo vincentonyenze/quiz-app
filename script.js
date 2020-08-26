@@ -9,6 +9,11 @@ const progressEl = document.querySelector(".progress");
 const progressBarEl = document.getElementById("progress-bar");
 const prevBtn = document.getElementById("prev-btn");
 const nextBtn = document.getElementById("next-btn");
+const scoreEl = document.getElementById("score");
+const scoreTotalEl = document.getElementById("score-total");
+const resultMessageEl = document.getElementById("result-message");
+const correctCountEl = document.getElementById("correct-count");
+const incorrectCountEl = document.getElementById("incorrect-count");
 
 const screens = {
   start: document.getElementById("start-screen"),
@@ -22,6 +27,14 @@ const state = {
   currentIndex: 0, // which question is showing
   answers: [], // answers[i] = index the user picked for question i
 };
+
+// Ordered from highest to lowest so find() picks the best match
+const resultMessages = [
+  { minPercent: 100, text: "Perfect score! You really know your JavaScript. 🏆" },
+  { minPercent: 80, text: "Great job! Just a few to review." },
+  { minPercent: 50, text: "Good effort. Review the ones you missed and try again." },
+  { minPercent: 0, text: "Keep practising. Every expert started here." },
+];
 
 // ===== Helpers =====
 // Show text inside `backticks` as <code>, without using innerHTML.
@@ -138,6 +151,31 @@ function renderQuestion() {
   renderNav(selectedIndex);
 }
 
+// ===== Score and results =====
+function calculateScore() {
+  return questions.reduce(
+    (score, question, index) =>
+      state.answers[index] === question.correctIndex ? score + 1 : score,
+    0
+  );
+}
+
+function getResultMessage(percent) {
+  return resultMessages.find((message) => percent >= message.minPercent).text;
+}
+
+function renderResults() {
+  const total = questions.length;
+  const score = calculateScore();
+  const percent = Math.round((score / total) * 100);
+
+  scoreEl.textContent = score;
+  scoreTotalEl.textContent = total;
+  correctCountEl.textContent = score;
+  incorrectCountEl.textContent = total - score;
+  resultMessageEl.textContent = getResultMessage(percent);
+}
+
 // ===== Navigation =====
 function goToQuestion(index) {
   state.currentIndex = index;
@@ -147,6 +185,7 @@ function goToQuestion(index) {
 }
 
 function finishQuiz() {
+  renderResults();
   showScreen("result");
 }
 
