@@ -4,6 +4,9 @@ const startBtn = document.getElementById("start-btn");
 const questionTextEl = document.getElementById("question-text");
 const answersEl = document.getElementById("answers");
 const feedbackEl = document.getElementById("feedback");
+const questionCounterEl = document.getElementById("question-counter");
+const progressEl = document.querySelector(".progress");
+const progressBarEl = document.getElementById("progress-bar");
 const prevBtn = document.getElementById("prev-btn");
 const nextBtn = document.getElementById("next-btn");
 
@@ -94,6 +97,22 @@ function renderFeedback(question, selectedIndex) {
   }
 }
 
+function getAnsweredCount() {
+  return state.answers.filter((answer) => answer !== undefined).length;
+}
+
+function renderProgress() {
+  const total = questions.length;
+  const answered = getAnsweredCount();
+  const percent = Math.round((answered / total) * 100);
+
+  questionCounterEl.textContent = `Question ${state.currentIndex + 1} of ${total}`;
+
+  progressBarEl.style.width = `${percent}%`;
+  progressEl.setAttribute("aria-valuenow", percent);
+  progressEl.setAttribute("aria-valuetext", `${answered} of ${total} answered`);
+}
+
 function renderNav(selectedIndex) {
   const isFirst = state.currentIndex === 0;
   const isLast = state.currentIndex === questions.length - 1;
@@ -115,6 +134,7 @@ function renderQuestion() {
     )
   );
   renderFeedback(question, selectedIndex);
+  renderProgress();
   renderNav(selectedIndex);
 }
 
