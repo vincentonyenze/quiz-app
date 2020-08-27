@@ -1,6 +1,7 @@
 // ===== DOM elements =====
 const questionTotalEl = document.getElementById("question-total");
 const startBtn = document.getElementById("start-btn");
+const restartBtn = document.getElementById("restart-btn");
 const questionTextEl = document.getElementById("question-text");
 const answersEl = document.getElementById("answers");
 const feedbackEl = document.getElementById("feedback");
@@ -189,14 +190,20 @@ function finishQuiz() {
   showScreen("result");
 }
 
-// ===== Event handlers =====
-function handleStart() {
+// ===== Quiz lifecycle =====
+function resetQuiz() {
   state.currentIndex = 0;
   state.answers = [];
+}
+
+// Used by both Start and Restart, so a new attempt always begins the same way
+function startQuiz() {
+  resetQuiz();
   renderQuestion();
   showScreen("quiz");
 }
 
+// ===== Event handlers =====
 function handleAnswerClick(event) {
   const button = event.target.closest(".answer");
   if (!button || button.disabled) return;
@@ -223,7 +230,8 @@ function handleNext() {
 }
 
 // ===== Init =====
-startBtn.addEventListener("click", handleStart);
+startBtn.addEventListener("click", startQuiz);
+restartBtn.addEventListener("click", startQuiz);
 answersEl.addEventListener("click", handleAnswerClick);
 prevBtn.addEventListener("click", handlePrev);
 nextBtn.addEventListener("click", handleNext);
