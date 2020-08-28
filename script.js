@@ -25,6 +25,7 @@ const screens = {
 // ===== State =====
 const state = {
   screen: "start",
+  questions: [], // this attempt's shuffled copy of the questions
   currentIndex: 0, // which question is showing
   answers: [], // answers[i] = index the user picked for question i
 };
@@ -51,6 +52,28 @@ function setTextWithCode(element, text) {
     return document.createTextNode(part);
   });
   element.replaceChildren(...nodes);
+}
+
+// Fisher–Yates shuffle: returns a shuffled copy, the original is unchanged
+function shuffle(array) {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+// Shuffle a question's answers and work out where the correct one ended up.
+// (This relies on each question's answers being different from each other.)
+function shuffleAnswers(question) {
+  const correctAnswer = question.answers[question.correctIndex];
+  const answers = shuffle(question.answers);
+  return {
+    ...question,
+    answers,
+    correctIndex: answers.indexOf(correctAnswer),
+  };
 }
 
 // ===== Screens =====
@@ -116,7 +139,7 @@ function getAnsweredCount() {
 }
 
 function renderProgress() {
-  const total = questions.length;
+  const total = state.questions.length;
   const answered = getAnsweredCount();
   const percent = Math.round((answered / total) * 100);
 
@@ -129,7 +152,7 @@ function renderProgress() {
 
 function renderNav(selectedIndex) {
   const isFirst = state.currentIndex === 0;
-  const isLast = state.currentIndex === questions.length - 1;
+  const isLast = state.currentIndex === state.questions.length - 1;
 
   prevBtn.disabled = isFirst;
   // You must answer before moving on
@@ -138,7 +161,7 @@ function renderNav(selectedIndex) {
 }
 
 function renderQuestion() {
-  const question = questions[state.currentIndex];
+  const question = state.questions[state.currentIndex];
   const selectedIndex = state.answers[state.currentIndex];
 
   setTextWithCode(questionTextEl, question.question);
@@ -154,7 +177,7 @@ function renderQuestion() {
 
 // ===== Score and results =====
 function calculateScore() {
-  return questions.reduce(
+  return state.questions.reduce(
     (score, question, index) =>
       state.answers[index] === question.correctIndex ? score + 1 : score,
     0
@@ -166,7 +189,7 @@ function getResultMessage(percent) {
 }
 
 function renderResults() {
-  const total = questions.length;
+  const total = state.questions.length;
   const score = calculateScore();
   const percent = Math.round((score / total) * 100);
 
@@ -192,6 +215,7 @@ function finishQuiz() {
 
 // ===== Quiz lifecycle =====
 function resetQuiz() {
+  state.questions = shuffle(questions).map(shuffleAnswers);
   state.currentIndex = 0;
   state.answers = [];
 }
@@ -221,7 +245,7 @@ function handlePrev() {
 }
 
 function handleNext() {
-  const isLast = state.currentIndex === questions.length - 1;
+  const isLast = state.currentIndex === state.questions.length - 1;
   if (isLast) {
     finishQuiz();
   } else {
