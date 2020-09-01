@@ -15,6 +15,7 @@ const scoreTotalEl = document.getElementById("score-total");
 const resultMessageEl = document.getElementById("result-message");
 const correctCountEl = document.getElementById("correct-count");
 const incorrectCountEl = document.getElementById("incorrect-count");
+const reviewListEl = document.getElementById("review-list");
 
 const screens = {
   start: document.getElementById("start-screen"),
@@ -198,6 +199,45 @@ function renderResults() {
   correctCountEl.textContent = score;
   incorrectCountEl.textContent = total - score;
   resultMessageEl.textContent = getResultMessage(percent);
+  renderReview();
+}
+
+// ===== Answer review =====
+function createParagraph(className, text) {
+  const paragraph = document.createElement("p");
+  paragraph.className = className;
+  setTextWithCode(paragraph, text);
+  return paragraph;
+}
+
+function createReviewItem(question, index) {
+  const selectedIndex = state.answers[index];
+  const isCorrect = selectedIndex === question.correctIndex;
+
+  const item = document.createElement("li");
+  item.className = `review-item review-item--${isCorrect ? "correct" : "incorrect"}`;
+
+  item.append(
+    createParagraph("review-item__question", question.question),
+    createParagraph("review-item__status", isCorrect ? "✓ Correct" : "✗ Incorrect"),
+    createParagraph("review-item__answer", `Your answer: ${question.answers[selectedIndex]}`)
+  );
+
+  if (!isCorrect) {
+    item.append(
+      createParagraph(
+        "review-item__answer",
+        `Correct answer: ${question.answers[question.correctIndex]}`
+      )
+    );
+  }
+
+  item.append(createParagraph("review-item__explanation", question.explanation));
+  return item;
+}
+
+function renderReview() {
+  reviewListEl.replaceChildren(...state.questions.map(createReviewItem));
 }
 
 // ===== Navigation =====
